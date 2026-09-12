@@ -6,9 +6,9 @@ import { MoveLeft } from 'lucide-react'
 import Link from 'next/link'
 
 interface ProjectPageProps {
-  params: {
+  params: Promise<{
     id: string
-  }
+  }>
 }
 
 export async function generateStaticParams() {
@@ -17,8 +17,9 @@ export async function generateStaticParams() {
   }))
 }
 
-export function generateMetadata({ params }: ProjectPageProps): Metadata {
-  const project = Projects.find((p) => p.id === params.id)
+export async function generateMetadata({ params }: ProjectPageProps): Promise<Metadata> {
+  const { id } = await params
+  const project = Projects.find((p) => p.id === id)
 
   if (!project) {
     return {
@@ -33,7 +34,7 @@ export function generateMetadata({ params }: ProjectPageProps): Metadata {
 }
 
 export default async function ProjectPage({ params }: ProjectPageProps) {
-  const { id } = params
+  const { id } = await params
 
   const project = Projects.find((project) => project.id === id)
   if (!project) notFound()

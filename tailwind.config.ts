@@ -1,10 +1,11 @@
-/** @type {import('tailwindcss').Config} */
-module.exports = {
+import type { Config } from 'tailwindcss'
+
+export default {
   content: ['./src/**/*.{js,ts,jsx,tsx}'],
   darkMode: ['class', 'class'],
   theme: {
     container: {
-      center: 'true',
+      center: true,
       padding: '2rem',
       screens: {
         '2xl': '1400px',
@@ -170,4 +171,4 @@ module.exports = {
     },
   },
   plugins: [require('@tailwindcss/forms'), require('tailwindcss-animate')],
-}
+} satisfies Config

@@ -36,7 +36,10 @@ export const EventCard = ({ event, onChange }: EventCardProps) => {
   const formattedStartTime = event.startTime ? formatTime(event.startTime) : 'N/A'
   const formattedEndTime = event.endTime ? formatTime(event.endTime) : 'N/A'
 
-  const googleCalendarUrl = `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${encodeURIComponent(event.title)}&dates=${event.startTime ? `${event.startTime.toISOString().replace(/[-:.]/g, '')}Z/${event.endTime ? event.endTime.toISOString().replace(/[-:.]/g, '') + 'Z' : ''}` : ''}&details=${encodeURIComponent(event.description)}&location=${encodeURIComponent(event.location || '')}`
+  const toGoogleCalendarDate = (date: Date) =>
+    date.toISOString().replaceAll('-', '').replaceAll(':', '').replaceAll('.', '')
+
+  const googleCalendarUrl = `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${encodeURIComponent(event.title)}&dates=${event.startTime ? `${toGoogleCalendarDate(event.startTime)}Z/${event.endTime ? toGoogleCalendarDate(event.endTime) + 'Z' : ''}` : ''}&details=${encodeURIComponent(event.description)}&location=${encodeURIComponent(event.location || '')}`
 
   return (
     <Card className="w-[425px] transition hover:scale-105">
