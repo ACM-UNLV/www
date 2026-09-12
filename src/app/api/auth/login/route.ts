@@ -10,8 +10,9 @@ const WINDOW_SEC = 15 * 60
 
 type FailState = { c: number; t: number }
 
-function readFailState(): FailState {
-  const raw = cookies().get(FAIL_COOKIE)?.value
+async function readFailState(): Promise<FailState> {
+  const cookieStore = await cookies()
+  const raw = cookieStore.get(FAIL_COOKIE)?.value
   if (!raw) return { c: 0, t: Date.now() }
   try {
     const parsed = JSON.parse(raw) as FailState
@@ -27,8 +28,9 @@ function readFailState(): FailState {
   }
 }
 
-function writeFailState(state: FailState) {
-  cookies().set(FAIL_COOKIE, JSON.stringify(state), {
+async function writeFailState(state: FailState) {
+  const cookieStore = await cookies()
+  cookieStore.set(FAIL_COOKIE, JSON.stringify(state), {
     httpOnly: true,
     secure: true,
     sameSite: 'strict',
@@ -37,14 +39,15 @@ function writeFailState(state: FailState) {
   })
 }
 
-function clearFailState() {
-  cookies().delete(FAIL_COOKIE)
+async function clearFailState() {
+  const cookieStore = await cookies()
+  cookieStore.delete(FAIL_COOKIE)
 }
 
 export async function POST(req: Request) {
   const { username, password } = await req.json()
 
-  const st = readFailState()
+  const st = await readFailState()
   if (st.c >= MAX_FAILS) {
     const retryAfterSec = Math.max(0, WINDOW_SEC - Math.floor((Date.now() - st.t) / 1000)) || 1
     return NextResponse.json(
@@ -65,7 +68,7 @@ export async function POST(req: Request) {
 
   if (!validUser || !validPass) {
     const nextState: FailState = st.c === 0 ? { c: 1, t: Date.now() } : { c: st.c + 1, t: st.t }
-    writeFailState(nextState)
+    await writeFailState(nextState)
 
     const triesLeft = Math.max(0, MAX_FAILS - nextState.c)
     return NextResponse.json(
@@ -78,14 +81,15 @@ export async function POST(req: Request) {
     )
   }
 
-  clearFailState()
+  await clearFailState()
 
   const token = await new SignJWT({ role: 'admin' })
     .setProtectedHeader({ alg: 'HS256' })
     .setExpirationTime('2h')
     .sign(key)
 
-  cookies().set('acm_session', token, {
+  const cookieStore = await cookies()
+  cookieStore.set('acm_session', token, {
     httpOnly: true,
     secure: true,
     sameSite: 'strict',

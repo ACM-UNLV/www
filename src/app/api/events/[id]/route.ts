@@ -2,10 +2,11 @@ import { NextResponse } from 'next/server'
 import { db } from '@/server/db'
 import { isAdminRequest, unauthorizedJson } from '@/server/auth'
 
-export async function PATCH(req: Request, { params }: { params: { id: string } }) {
+export async function PATCH(req: Request, { params }: { params: Promise<{ id: string }> }) {
   const isAdmin = await isAdminRequest(req)
   if (!isAdmin) return unauthorizedJson()
   try {
+    const { id } = await params
     const body = await req.json()
     const { date, startTime, endTime, ...rest } = body
     const eventDate = date ? new Date(date) : undefined
@@ -26,7 +27,7 @@ export async function PATCH(req: Request, { params }: { params: { id: string } }
     }
 
     const updated = await db.event.update({
-      where: { id: Number.parseInt(params.id, 10) },
+      where: { id: Number.parseInt(id, 10) },
       data: {
         ...rest,
         date: eventDate,
@@ -40,11 +41,12 @@ export async function PATCH(req: Request, { params }: { params: { id: string } }
   }
 }
 
-export async function DELETE(req: Request, { params }: { params: { id: string } }) {
+export async function DELETE(req: Request, { params }: { params: Promise<{ id: string }> }) {
   const isAdmin = await isAdminRequest(req)
   if (!isAdmin) return unauthorizedJson()
   try {
-    await db.event.delete({ where: { id: Number.parseInt(params.id, 10) } })
+    const { id } = await params
+    await db.event.delete({ where: { id: Number.parseInt(id, 10) } })
     return NextResponse.json({ ok: true })
   } catch (e) {
     return NextResponse.json({ error: 'Failed to delete event' }, { status: 500 })

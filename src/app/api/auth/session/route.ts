@@ -5,7 +5,8 @@ import { jwtVerify } from 'jose'
 const key = new TextEncoder().encode(process.env.JWT_SECRET!)
 
 export async function GET() {
-  const token = cookies().get('acm_session')?.value ?? null
+  const cookieStore = await cookies()
+  const token = cookieStore.get('acm_session')?.value ?? null
 
   if (!token) {
     return NextResponse.json({ ok: false }, { status: 200 })
@@ -22,7 +23,7 @@ export async function GET() {
     })
   } catch {
     // expired/invalid -> treat as logged out
-    cookies().delete('acm_session')
+    cookieStore.delete('acm_session')
     return NextResponse.json({ ok: false }, { status: 200 })
   }
 }
